@@ -3,16 +3,22 @@ use std::time::Instant;
 
 fn main() {
 
-    deploy_turret("http://127.0.0.1:8500/employee/occupation/", 50);
-    deploy_turret("http://127.0.0.1:8500/employee/salary/", 50);
-    deploy_turret_with_id("http://127.0.0.1:8500/employee/id/", 50);
+    deploy_turret("http://127.0.0.1:8500/employee/occupation/", 500, false);
+    deploy_turret("http://127.0.0.1:8500/employee/salary/", 500, false);
+    deploy_turret("http://127.0.0.1:8500/employee/id/", 500, true);
 }
 
-fn deploy_turret(base_url: &str, requests_to_fire: u128) {
+fn deploy_turret(base_url: &str, requests_to_fire: u128, param_requires_num: bool) {
 
+    println!("Starting {} requests to {}", requests_to_fire, base_url);
     let mut total_time = 0;
     for x in 1..requests_to_fire {
-        let url = &create_url_with_param(base_url, &determine_occupation(x));
+        let url = & if param_requires_num {
+           create_url_with_id(base_url, x)
+        } else {
+           create_url_with_param(base_url, &determine_occupation(x))
+        };
+
         let mut response_body = String::new();
         let result = hit_endpoint(url, &mut response_body, &mut total_time);
         if !result.is_ok() {
@@ -20,21 +26,6 @@ fn deploy_turret(base_url: &str, requests_to_fire: u128) {
         }
     }
 
-    let avg_request_time = total_time/requests_to_fire;
-    println!("Average request time was {} ms", avg_request_time);
-}
-
-fn deploy_turret_with_id(base_url: &str, requests_to_fire: u128) {
-
-    let mut total_time = 0;
-    for x in 1..requests_to_fire {
-        let url = &create_url_with_id(base_url, x);
-        let mut response_body = String::new();
-        let result = hit_endpoint(url, &mut response_body, &mut total_time);
-        if !result.is_ok() {
-            println!("Error during GET request");
-        }
-    }
     let avg_request_time = total_time/requests_to_fire;
     println!("Average request time was {} ms", avg_request_time);
 }
