@@ -1,16 +1,27 @@
 use std::io::Read;
 use std::time::Instant;
+#[macro_use]
+extern crate clap;
 
 fn main() {
 
-    deploy_turret("http://127.0.0.1:8500/employee/occupation/", 500, false);
-    deploy_turret("http://127.0.0.1:8500/employee/salary/", 500, false);
-    deploy_turret("http://127.0.0.1:8500/employee/id/", 500, true);
+    let matches = clap_app!(myapp =>
+        (version: "0.1.0")
+        (author: "mautomic")
+        (@arg URL: -u --url +required +takes_value "Sets the url to fire requests at")
+        (@arg NUM: -n --num +required +takes_value "Number of requests")
+    ).get_matches();
+
+    let url = matches.value_of("URL").unwrap();
+    let num = matches.value_of("NUM").unwrap();
+    let requests_to_fire = num.parse::<u128>().unwrap();
+
+    println!("{} will be blasted with {} requests", url, requests_to_fire);
+    deploy_turret(url, requests_to_fire, true);
 }
 
 fn deploy_turret(base_url: &str, requests_to_fire: u128, param_requires_num: bool) {
 
-    println!("Starting {} requests to {}", requests_to_fire, base_url);
     let mut total_time = 0;
     for x in 1..requests_to_fire {
         let url = & if param_requires_num {
